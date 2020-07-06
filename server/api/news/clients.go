@@ -15,15 +15,15 @@ type Client struct {
 
 var clients = make(map[Client]bool)
 
-func (e *Env) UpdateClients() {
-	ch, err := e.Rabbit.Channel()
+func (a *Api) UpdateClients() {
+	ch, err := a.Rabbit.Channel()
 	if err != nil {
 		fmt.Println("channel connection failed")
 	}
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		e.Conf.RabbitQueueName,
+		a.Conf.RabbitQueueName,
 		false,
 		false,
 		false,
@@ -40,7 +40,7 @@ func (e *Env) UpdateClients() {
 		nil,
 	)
 	forever := make(chan bool)
-	go msgHandler(msgs, e.Redis)
+	go msgHandler(msgs, a.Redis)
 	<-forever
 }
 func msgHandler(msgs <-chan amqp.Delivery, redis *redis.Client) {

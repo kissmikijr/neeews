@@ -16,30 +16,30 @@ func main() {
 
 	conn, err := amqp.Dial(conf.RabbitConnectionString)
 	if err != nil {
-		fmt.Println("amqp connection failed")
+		panic("amqp connection failed")
 	}
 	defer conn.Close()
 
 	options, err := redis.ParseURL(conf.RedisConnectionString)
 	if err != nil {
-		fmt.Println("shit happens")
+		panic("redis connection failed")
 	}
 	options.Username = "" // need to set it to empty string since rediscloud is a dummy username
 	rdb := redis.NewClient(options)
 
-	env := &news.Env{
+	api := &news.Api{
 		Redis:  rdb,
 		Rabbit: conn,
 		Conf:   conf,
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/headlines", env.Headlines).Methods("GET")
-	r.HandleFunc("/everything", env.Everything).Methods("GET")
+	r.HandleFunc("/headlines", api.Headlines).Methods("GET")
+	r.HandleFunc("/everything", api.Everything).Methods("GET")
 
-	go env.UpdateClients()
+	go api.UpdateClients()
 
 	fmt.Println("Server listening on port: 5000")
-	http.ListenAndServe(":5000", r)
+	http.ListenAndServe(":"+conf.Port, r)
 
 }

@@ -9,6 +9,7 @@ type Config struct {
 	RabbitConnectionString string
 	RabbitQueueName        string
 	NewsApiKey             string
+	Port                   string
 }
 
 func New() *Config {
@@ -17,6 +18,7 @@ func New() *Config {
 		RabbitConnectionString: getEnv("CLOUDAMQP_URL", ""),
 		RabbitQueueName:        getEnv("RABBIT_QUEUE_NAME", ""),
 		NewsApiKey:             getEnv("NEWS_API_KEY", ""),
+		Port:                   getEnv("PORT", "5000"),
 	}
 }
 func getEnv(key string, defaultVal string) string {

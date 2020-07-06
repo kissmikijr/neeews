@@ -3,22 +3,12 @@ package news
 import (
 	"context"
 	"fmt"
-	"neeews/server/config"
 	"net/http"
-
-	"github.com/go-redis/redis/v8"
-	"github.com/streadway/amqp"
 )
 
 var ctx = context.Background()
 
-type Env struct {
-	Redis  *redis.Client
-	Rabbit *amqp.Connection
-	Conf   *config.Config
-}
-
-func (e *Env) Headlines(w http.ResponseWriter, r *http.Request) {
+func (a *Api) Headlines(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 
 	mc := make(chan []byte)
@@ -35,7 +25,7 @@ func (e *Env) Headlines(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cNews, err := e.Redis.Get(ctx, country[0]).Result()
+	cNews, err := a.Redis.Get(ctx, country[0]).Result()
 	if err != nil {
 		fmt.Println("Panic.")
 	}
@@ -52,6 +42,6 @@ func (e *Env) Headlines(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (e *Env) Everything(w http.ResponseWriter, r *http.Request) {
+func (a *Api) Everything(w http.ResponseWriter, r *http.Request) {
 
 }
