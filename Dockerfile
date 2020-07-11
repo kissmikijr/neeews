@@ -1,19 +1,25 @@
-FROM golang as server
-WORKDIR /server
-COPY server .
-RUN go get ./...
-RUN go build .
-
-FROM golang as worker
-WORKDIR /worker
-
-RUN go build ./worker
-
-FROM alpine
+FROM golang:1.14 as build
 WORKDIR /app
-COPY --from=server /server/server /server/server
-COPY --from=worker /worker/worker /worker/worker
+COPY go.mod .
+COPY go.sum .
 
-CMD  ["/app/server/server"]
+RUN go mod download
+
+COPY . .
+
+FROM build as server
+WORKDIR /app/server
+RUN go build -o .
+
+FROM build as worker
+WORKDIR /app/worker
+RUN go build -o .
+
+FROM scratch
+WORKDIR /app
+COPY --from=server /app/server /app/server
+COPY --from=worker /app/worker /app/worker
+
+CMD  ["/app/server"]
 
 
