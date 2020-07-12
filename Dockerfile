@@ -9,18 +9,18 @@ COPY . .
 
 FROM build as server
 WORKDIR /app/server
-RUN go build -o .
-RUN chmod +x /app/server
+RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o .
 
 FROM build as worker
 WORKDIR /app/worker
-RUN go build -o .
-RUN chmod +x /app/server
+RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o .
 
-FROM scratch
+FROM alpine
 WORKDIR /app
-COPY --from=server /app/server /app/server
-COPY --from=worker /app/worker /app/worker
+COPY --chown=0:0 --from=server /app/server/server /app/server
+COPY --chown=0:0 --from=worker /app/worker/worker /app/worker
+RUN chmod +x /app/server
+RUN chmod +x /app/worker
 
 CMD  ["/app/server"]
 
