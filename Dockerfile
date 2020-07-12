@@ -10,10 +10,12 @@ COPY . .
 FROM build as server
 WORKDIR /app/server
 RUN go build -o .
+RUN chmod +x /app/server
 
 FROM build as worker
 WORKDIR /app/worker
 RUN go build -o .
+RUN chmod +x /app/server
 
 FROM scratch
 WORKDIR /app
