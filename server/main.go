@@ -34,8 +34,9 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/headlines", api.Headlines).Methods("GET")
-	r.HandleFunc("/everything", api.Everything).Methods("GET")
+	s := r.PathPrefix("/api/news/").Subrouter()
+	s.HandleFunc("/headlines", api.Headlines).Methods("GET")
+	s.HandleFunc("/everything", api.Everything).Methods("GET")
 
 	go api.UpdateClients()
 
