@@ -16,22 +16,8 @@ type Client struct {
 var clients = make(map[Client]bool)
 
 func (a *Api) UpdateClients() {
-	ch, err := a.Rabbit.Channel()
-	if err != nil {
-		fmt.Println("channel connection failed")
-	}
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
+	msgs, err := a.Rabbit.Consume(
 		a.Conf.RabbitQueueName,
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	msgs, err := ch.Consume(
-		q.Name,
 		"",
 		true,
 		false,
@@ -39,13 +25,16 @@ func (a *Api) UpdateClients() {
 		false,
 		nil,
 	)
+	if err != nil {
+		fmt.Println("Error during message consumption")
+	}
 	forever := make(chan bool)
 	go msgHandler(msgs, a.Redis)
 	<-forever
 }
 func msgHandler(msgs <-chan amqp.Delivery, redis *redis.Client) {
-	for d := range msgs {
-		fmt.Printf("Received message: %s", d.Body)
+	for m := range msgs {
+		fmt.Printf("Received message: %s", m.Body)
 
 		for c, _ := range clients {
 			params := c.request.URL.Query()
@@ -56,7 +45,7 @@ func msgHandler(msgs <-chan amqp.Delivery, redis *redis.Client) {
 
 			cNews, err := redis.Get(ctx, country[0]).Result()
 			if err != nil {
-				fmt.Println("Panic.")
+				fmt.Println("Error with redis get")
 			}
 			c.mc <- []byte(cNews)
 		}

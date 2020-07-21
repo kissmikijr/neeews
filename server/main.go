@@ -2,34 +2,23 @@ package main
 
 import (
 	"fmt"
+	"neeews/components"
+	"neeews/config"
 	news "neeews/server/api/news"
-	"neeews/server/config"
 	"net/http"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
-	"github.com/streadway/amqp"
 )
 
 func main() {
 	conf := config.New()
 
-	conn, err := amqp.Dial(conf.RabbitConnectionString)
-	if err != nil {
-		panic("amqp connection failed")
-	}
-	defer conn.Close()
-
-	options, err := redis.ParseURL(conf.RedisConnectionString)
-	if err != nil {
-		panic("redis connection failed")
-	}
-	options.Username = "" // need to set it to empty string since rediscloud is a dummy username
-	rdb := redis.NewClient(options)
+	rabbitChannel := components.NewRabbit(conf)
+	redis := components.NewRedis(conf.RedisConnectionString)
 
 	api := &news.Api{
-		Redis:  rdb,
-		Rabbit: conn,
+		Redis:  redis,
+		Rabbit: rabbitChannel,
 		Conf:   conf,
 	}
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"neeews/server/config"
+	"neeews/components"
+	"neeews/config"
 	"net/http"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/streadway/amqp"
 )
 
@@ -35,34 +35,8 @@ type NewsApiResponse struct {
 
 func main() {
 	conf := config.New()
-
-	options, err := redis.ParseURL(conf.RedisConnectionString)
-	if err != nil {
-		fmt.Println("shit happens")
-	}
-	options.Username = "" // need to set it to empty string since rediscloud is a dummy username
-	rdb := redis.NewClient(options)
-
-	conn, err := amqp.Dial(conf.RabbitConnectionString)
-	if err != nil {
-		fmt.Println("amqp connection failed")
-	}
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	if err != nil {
-		fmt.Println("channel connection failed")
-	}
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		conf.RabbitQueueName,
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
+	redis := components.NewRedis(conf.RedisConnectionString)
+	rabbitChannel := components.NewRabbit(conf)
 
 	resp, err := http.Get(fmt.Sprintf("https://newsapi.org/v2/top-headlines?country=%s&apiKey=%s", "hu", conf.NewsApiKey))
 	if err != nil {
@@ -80,19 +54,18 @@ func main() {
 		fmt.Println(err)
 	}
 
-	err = rdb.Set(ctx, "hu", r, 0).Err()
+	err = redis.Set(ctx, "hu", r, 0).Err()
 	if err != nil {
 		panic(err)
 	}
-	body := "Trigger Client update - go"
-	err = ch.Publish(
+	err = rabbitChannel.Publish(
 		"",
-		q.Name,
+		conf.RabbitQueueName,
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(body),
+			Body:        []byte("Trigger Client update - go"),
 		},
 	)
 	if err != nil {

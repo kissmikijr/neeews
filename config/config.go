@@ -10,6 +10,7 @@ type Config struct {
 	RabbitQueueName        string
 	NewsApiKey             string
 	Port                   string
+	MongoDBUri             string
 }
 
 func New() *Config {
@@ -19,6 +20,7 @@ func New() *Config {
 		RabbitQueueName:        getEnv("RABBIT_QUEUE_NAME", ""),
 		NewsApiKey:             getEnv("NEWS_API_KEY", ""),
 		Port:                   getEnv("PORT", "5000"),
+		MongoDBUri:             getEnv("MONGODB_URI", ""),
 	}
 }
 func getEnv(key string, defaultVal string) string {

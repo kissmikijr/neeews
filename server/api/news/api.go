@@ -1,7 +1,7 @@
 package news
 
 import (
-	"neeews/server/config"
+	"neeews/config"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/streadway/amqp"
@@ -9,6 +9,6 @@ import (
 
 type Api struct {
 	Redis  *redis.Client
-	Rabbit *amqp.Connection
+	Rabbit *amqp.Channel
 	Conf   *config.Config
 }
