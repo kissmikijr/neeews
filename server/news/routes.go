@@ -11,9 +11,7 @@ var ctx = context.Background()
 func (a *Api) Headlines(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 
-	mc := make(chan []byte)
-	currentClient := Client{mc: mc, request: r}
-	clients[currentClient] = true
+	client := RegisterClient(r)
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -25,19 +23,18 @@ func (a *Api) Headlines(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cNews, err := a.Redis.Get(ctx, country[0]).Result()
+	headlines, err := a.Redis.Get(ctx, country[0]).Result()
 	if err != nil {
 		fmt.Println("Panic.")
 	}
-	defer func() {
-		delete(clients, currentClient)
-	}()
+
+	defer RemoveClient(client)
 
 	go func() {
-		mc <- []byte(cNews)
+		client.mc <- []byte(headlines)
 	}()
 	for {
-		fmt.Fprintf(w, "data: %s\n\n", <-mc)
+		fmt.Fprintf(w, "data: %s\n\n", <-client.mc)
 	}
 
 }

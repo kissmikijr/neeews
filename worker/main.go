@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,56 +10,40 @@ import (
 	"net/http"
 
 	"github.com/streadway/amqp"
+	"github.com/tidwall/gjson"
 )
 
 var ctx = context.Background()
-
-type Source struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-type Article struct {
-	Source      Source `json:"source"`
-	Author      string `json:"author"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Url         string `json:"url"`
-	UrlToImage  string `json:"urlToImage"`
-	PublishedAt string `json:"publishedAt"`
-	Content     string `json:"content"`
-}
-type NewsApiResponse struct {
-	Status       string    `json:"status"`
-	TotalResults int       `json:"totalResults"`
-	Articles     []Article `json:"articles"`
-}
 
 func main() {
 	conf := config.New()
 	redis := components.NewRedis(conf.RedisConnectionString)
 	rabbitChannel := components.NewRabbit(conf)
 
-	resp, err := http.Get(fmt.Sprintf("https://newsapi.org/v2/top-headlines?country=%s&apiKey=%s", "hu", conf.NewsApiKey))
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
+	for _, country := range conf.CountryCodes {
 
-	var nar NewsApiResponse
-	err = json.NewDecoder(resp.Body).Decode(&nar)
-	if err != nil {
-		fmt.Println(err)
-	}
-	r, err := json.Marshal(nar.Articles)
-	if err != nil {
-		fmt.Println(err)
+		resp, err := http.Get(fmt.Sprintf("https://newsapi.org/v2/top-headlines?country=%s&apiKey=%s", country, conf.NewsApiKey))
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer resp.Body.Close()
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+
+		articles := gjson.Get(buf.String(), "articles")
+
+		r, err := json.Marshal(articles)
+		if err != nil {
+			panic(err)
+		}
+		err = redis.Set(ctx, country, r, 0).Err()
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	err = redis.Set(ctx, "hu", r, 0).Err()
-	if err != nil {
-		panic(err)
-	}
-	err = rabbitChannel.Publish(
+	err := rabbitChannel.Publish(
 		"",
 		conf.RabbitQueueName,
 		false,

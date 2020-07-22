@@ -11,6 +11,7 @@ type Config struct {
 	NewsApiKey             string
 	Port                   string
 	MongoDBUri             string
+	CountryCodes           [5]string
 }
 
 func New() *Config {
@@ -21,6 +22,7 @@ func New() *Config {
 		NewsApiKey:             getEnv("NEWS_API_KEY", ""),
 		Port:                   getEnv("PORT", "5000"),
 		MongoDBUri:             getEnv("MONGODB_URI", ""),
+		CountryCodes:           [5]string{"hu", "gb", "us", "ca", "de"},
 	}
 }
 func getEnv(key string, defaultVal string) string {

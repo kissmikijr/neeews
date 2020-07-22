@@ -32,6 +32,7 @@ func (a *Api) UpdateClients() {
 	go msgHandler(msgs, a.Redis)
 	<-forever
 }
+
 func msgHandler(msgs <-chan amqp.Delivery, redis *redis.Client) {
 	for m := range msgs {
 		fmt.Printf("Received message: %s", m.Body)
@@ -50,4 +51,16 @@ func msgHandler(msgs <-chan amqp.Delivery, redis *redis.Client) {
 			c.mc <- []byte(cNews)
 		}
 	}
+}
+
+func RegisterClient(r *http.Request) Client {
+	mc := make(chan []byte)
+	c := Client{mc: mc, request: r}
+	clients[c] = true
+
+	return c
+}
+
+func RemoveClient(currentClient Client) {
+	delete(clients, currentClient)
 }

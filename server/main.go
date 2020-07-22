@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"neeews/components"
 	"neeews/config"
-	news "neeews/server/api/news"
+	"neeews/server/news"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -24,8 +24,7 @@ func main() {
 
 	r := mux.NewRouter()
 	s := r.PathPrefix("/api/news/").Subrouter()
-	s.HandleFunc("/headlines", api.Headlines).Methods("GET")
-	s.HandleFunc("/everything", api.Everything).Methods("GET")
+	api.InitRoutes(s)
 
 	go api.UpdateClients()
 
