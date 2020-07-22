@@ -18,7 +18,9 @@ var ctx = context.Background()
 func main() {
 	conf := config.New()
 	redis := components.NewRedis(conf.RedisConnectionString)
-	rabbitChannel := components.NewRabbit(conf)
+	conn, ch := components.NewRabbit(conf)
+	defer conn.Close()
+	defer ch.Close()
 
 	for _, country := range conf.CountryCodes {
 
@@ -43,7 +45,7 @@ func main() {
 		}
 	}
 
-	err := rabbitChannel.Publish(
+	err := ch.Publish(
 		"",
 		conf.RabbitQueueName,
 		false,
