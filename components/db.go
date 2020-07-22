@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,7 +14,7 @@ func NewDB(connectionString string) *mongo.Client {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 	if err != nil {
-		fmt.Println("Fatal")
+		panic(err)
 	}
 	return client
 }

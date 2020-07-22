@@ -13,12 +13,15 @@ import (
 func main() {
 	conf := config.New()
 
-	rabbitChannel := components.NewRabbit(conf)
+	conn, channel := components.NewRabbit(conf)
+	defer conn.Close()
+	defer channel.Close()
+
 	redis := components.NewRedis(conf.RedisConnectionString)
 
 	api := &news.Api{
 		Redis:  redis,
-		Rabbit: rabbitChannel,
+		Rabbit: channel,
 		Conf:   conf,
 	}
 

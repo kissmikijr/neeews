@@ -6,18 +6,16 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func NewRabbit(conf *config.Config) *amqp.Channel {
+func NewRabbit(conf *config.Config) (*amqp.Connection, *amqp.Channel) {
 	conn, err := amqp.Dial(conf.RabbitConnectionString)
 	if err != nil {
-		panic("amqp connection failed")
+		panic(err)
 	}
-	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		panic("channel connection failed")
+		panic(err)
 	}
-	defer ch.Close()
 	_, err = ch.QueueDeclare(
 		conf.RabbitQueueName,
 		false,
@@ -27,5 +25,5 @@ func NewRabbit(conf *config.Config) *amqp.Channel {
 		nil,
 	)
 
-	return ch
+	return conn, ch
 }

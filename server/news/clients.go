@@ -23,7 +23,7 @@ func (a *Api) UpdateClients() {
 		nil,
 	)
 	if err != nil {
-		fmt.Println("Error during message consumption")
+		fmt.Println(err)
 	}
 	forever := make(chan bool)
 	go func() {
@@ -39,7 +39,7 @@ func (a *Api) UpdateClients() {
 
 				cNews, err := a.Redis.Get(ctx, country[0]).Result()
 				if err != nil {
-					fmt.Println("Error with redis get")
+					fmt.Println(err)
 				}
 				c.mc <- []byte(cNews)
 			}

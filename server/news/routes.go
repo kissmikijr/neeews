@@ -25,7 +25,7 @@ func (a *Api) Headlines(w http.ResponseWriter, r *http.Request) {
 	}
 	headlines, err := a.Redis.Get(ctx, country[0]).Result()
 	if err != nil {
-		fmt.Println("Panic.")
+		fmt.Println(err)
 	}
 
 	defer RemoveClient(client)
