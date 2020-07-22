@@ -33,6 +33,7 @@ func (a *Api) Headlines(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		client.mc <- []byte(headlines)
 	}()
+
 	for {
 		fmt.Fprintf(w, "data: %s\n\n", <-client.mc)
 	}

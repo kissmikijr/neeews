@@ -3,9 +3,6 @@ package news
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/go-redis/redis/v8"
-	"github.com/streadway/amqp"
 )
 
 type Client struct {
@@ -13,7 +10,7 @@ type Client struct {
 	request *http.Request
 }
 
-var clients = make(map[Client]bool)
+var clients = make(map[Client]struct{})
 
 func (a *Api) UpdateClients() {
 	msgs, err := a.Rabbit.Consume(
@@ -29,34 +26,32 @@ func (a *Api) UpdateClients() {
 		fmt.Println("Error during message consumption")
 	}
 	forever := make(chan bool)
-	go msgHandler(msgs, a.Redis)
-	<-forever
-}
+	go func() {
+		for m := range msgs {
+			fmt.Printf("Received message: %s", m.Body)
 
-func msgHandler(msgs <-chan amqp.Delivery, redis *redis.Client) {
-	for m := range msgs {
-		fmt.Printf("Received message: %s", m.Body)
+			for c, _ := range clients {
+				params := c.request.URL.Query()
+				country, ok := params["country"]
+				if !ok {
+					return
+				}
 
-		for c, _ := range clients {
-			params := c.request.URL.Query()
-			country, ok := params["country"]
-			if !ok {
-				return
+				cNews, err := a.Redis.Get(ctx, country[0]).Result()
+				if err != nil {
+					fmt.Println("Error with redis get")
+				}
+				c.mc <- []byte(cNews)
 			}
-
-			cNews, err := redis.Get(ctx, country[0]).Result()
-			if err != nil {
-				fmt.Println("Error with redis get")
-			}
-			c.mc <- []byte(cNews)
 		}
-	}
+	}()
+	<-forever
 }
 
 func RegisterClient(r *http.Request) Client {
 	mc := make(chan []byte)
 	c := Client{mc: mc, request: r}
-	clients[c] = true
+	clients[c] = struct{}{}
 
 	return c
 }
