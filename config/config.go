@@ -12,6 +12,8 @@ type Config struct {
 	Port                   string
 	MongoDBUri             string
 	CountryCodes           [5]string
+	WorkerToken            string
+	HostName               string
 }
 
 func New() *Config {
@@ -23,8 +25,11 @@ func New() *Config {
 		Port:                   getEnv("PORT", "5000"),
 		MongoDBUri:             getEnv("MONGODB_URI", ""),
 		CountryCodes:           [5]string{"hu", "gb", "us", "ca", "de"},
+		WorkerToken:            getEnv("WORKER_TOKEN", "erhrncwonudKre/ao?SrtrPnaldentTräsidumpwd8ramatid_isürmn.tennt.deViiceiitwhen"),
+		HostName:               getEnv("HOST_NAME", "http://localhost:5000"),
 	}
 }
+
 func getEnv(key string, defaultVal string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value

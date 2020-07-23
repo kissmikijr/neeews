@@ -2,9 +2,14 @@ package news
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
+
+type Body struct {
+	token string
+}
 
 var ctx = context.Background()
 
@@ -42,4 +47,17 @@ func (a *Api) Headlines(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) Everything(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func (a *Api) HandleUpdateClients(w http.ResponseWriter, r *http.Request) {
+
+	var body Body
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Println(body, "@@@@@")
+	a.UpdateClients()
 }

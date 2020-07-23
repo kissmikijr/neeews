@@ -15,7 +15,7 @@ COPY . .
 
 FROM prod as server
 WORKDIR /app/server
-RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o main .
+RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o .
 
 FROM prod as worker
 WORKDIR /app/worker

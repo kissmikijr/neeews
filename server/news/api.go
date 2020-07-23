@@ -17,4 +17,5 @@ type Api struct {
 func (a *Api) InitRoutes(r *mux.Router) {
 	r.HandleFunc("/headlines", a.Headlines).Methods("GET")
 	r.HandleFunc("/everything", a.Everything).Methods("GET")
+	r.HandleFunc("/webhook/update-clients", a.HandleUpdateClients).Methods("POST")
 }

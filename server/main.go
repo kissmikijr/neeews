@@ -29,8 +29,6 @@ func main() {
 	s := r.PathPrefix("/api/news/").Subrouter()
 	api.InitRoutes(s)
 
-	go api.UpdateClients()
-
 	fmt.Println("Server listening on port: 5000")
 	http.ListenAndServe(":"+conf.Port, r)
 
