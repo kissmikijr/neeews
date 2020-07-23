@@ -5,13 +5,19 @@ COPY go.sum .
 
 RUN go mod download
 
+
+FROM build as server-dev
+RUN go get github.com/githubnemo/CompileDaemon
+ENTRYPOINT CompileDaemon --build="go build server/main.go" --command=./main
+
+FROM build as prod
 COPY . .
 
-FROM build as server
+FROM prod as server
 WORKDIR /app/server
-RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o .
+RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o main .
 
-FROM build as worker
+FROM prod as worker
 WORKDIR /app/worker
 RUN GOARCH=amd64 CGO_ENABLED=0 GOOS=linux go build -o .
 

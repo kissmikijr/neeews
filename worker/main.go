@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,8 +9,27 @@ import (
 	"net/http"
 
 	"github.com/streadway/amqp"
-	"github.com/tidwall/gjson"
 )
+
+type Source struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+type Article struct {
+	Source      Source `json:"source"`
+	Author      string `json:"author"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Url         string `json:"url"`
+	UrlToImage  string `json:"urlToImage"`
+	PublishedAt string `json:"publishedAt"`
+	Content     string `json:"content"`
+}
+type NewsApiResponse struct {
+	Status       string    `json:"status"`
+	TotalResults int       `json:"totalResults"`
+	Articles     []Article `json:"articles"`
+}
 
 var ctx = context.Background()
 
@@ -30,12 +48,13 @@ func main() {
 		}
 		defer resp.Body.Close()
 
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
+		var newsApiResponse NewsApiResponse
 
-		articles := gjson.Get(buf.String(), "articles")
-
-		r, err := json.Marshal(articles)
+		err = json.NewDecoder(resp.Body).Decode(&newsApiResponse)
+		if err != nil {
+			panic(err)
+		}
+		r, err := json.Marshal(newsApiResponse.Articles)
 		if err != nil {
 			panic(err)
 		}
