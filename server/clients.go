@@ -2,21 +2,24 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+	"net/url"
+
+	"github.com/google/uuid"
 )
 
 type Client struct {
-	mc      chan []byte
-	request *http.Request
+	mc     chan []byte
+	params url.Values
+	route  string
+	id     uuid.UUID
 }
 
-var clients = make(map[Client]struct{})
+var clients = make(map[uuid.UUID]Client)
 
 func (a *App) UpdateClients() {
 	fmt.Println("UpdateClinets triggered")
-	for c := range clients {
-		params := c.request.URL.Query()
-		country, ok := params["country"]
+	for _, c := range clients {
+		country, ok := c.params["country"]
 		if !ok {
 			return
 		}
@@ -30,16 +33,20 @@ func (a *App) UpdateClients() {
 	}
 }
 
-func RegisterClient(r *http.Request) Client {
+func RegisterClient(p url.Values, r string) Client {
 	mc := make(chan []byte)
-	c := Client{mc: mc, request: r}
-	clients[c] = struct{}{}
+	id, err := uuid.NewRandom()
+	if err != nil {
+		panic(err)
+	}
+	c := Client{mc: mc, params: p, route: r, id: id}
+	clients[id] = c
 	fmt.Printf("Registered client: %s", c)
 
 	return c
 }
 
 func RemoveClient(c Client) {
-	delete(clients, c)
+	delete(clients, c.id)
 	fmt.Printf("Deleted client: %s", c)
 }

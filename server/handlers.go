@@ -17,7 +17,7 @@ var ctx = context.Background()
 func (a *App) Headlines(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 
-	client := RegisterClient(r)
+	client := RegisterClient(params, "headlines")
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -31,7 +31,8 @@ func (a *App) Headlines(w http.ResponseWriter, r *http.Request) {
 	}
 	headlines, err := a.Redis.Get(ctx, country[0]).Result()
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	defer RemoveClient(client)
