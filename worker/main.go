@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"neeews/components"
 	"neeews/config"
 	"net/http"
 )
@@ -35,40 +35,46 @@ type Body struct {
 
 var ctx = context.Background()
 
+func triggerClientUpdate(conf *config.Config) {
+	bearer := "Bearer " + conf.WorkerToken
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/news/webhook/update-clients", conf.HostName), nil)
+	req.Header.Add("Authorization", bearer)
+
+	client := &http.Client{}
+	_, err = client.Do(req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func main() {
 	conf := config.New()
-	// redis := components.NewRedis(conf.RedisConnectionString)
+	redis := components.NewRedis(conf.RedisConnectionString)
 
-	// for _, country := range conf.CountryCodes {
+	for _, country := range conf.CountryCodes {
 
-	// 	resp, err := http.Get(fmt.Sprintf("https://newsapi.org/v2/top-headlines?country=%s&apiKey=%s", country, conf.NewsApiKey))
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	defer resp.Body.Close()
+		resp, err := http.Get(fmt.Sprintf("https://newsapi.org/v2/top-headlines?country=%s&apiKey=%s", country, conf.NewsApiKey))
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer resp.Body.Close()
 
-	// 	var newsApiResponse NewsApiResponse
+		var newsApiResponse NewsApiResponse
 
-	// 	err = json.NewDecoder(resp.Body).Decode(&newsApiResponse)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	r, err := json.Marshal(newsApiResponse.Articles)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	err = redis.Set(ctx, country, r, 0).Err()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }
-	b, err := json.Marshal(&Body{conf.WorkerToken})
-	if err != nil {
-		log.Fatalln(err)
+		err = json.NewDecoder(resp.Body).Decode(&newsApiResponse)
+		if err != nil {
+			panic(err)
+		}
+		r, err := json.Marshal(newsApiResponse.Articles)
+		if err != nil {
+			panic(err)
+		}
+		err = redis.Set(ctx, country, r, 0).Err()
+		if err != nil {
+			panic(err)
+		}
 	}
+	triggerClientUpdate(conf)
 
-	_, err = http.Post(fmt.Sprintf("%s/api/news/webhook/update-clients", conf.HostName), "application/json", bytes.NewBuffer(b))
-	if err != nil {
-		log.Fatalln(err)
-	}
 }

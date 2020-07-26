@@ -8,7 +8,7 @@ RUN go mod download
 
 FROM build as server-dev
 RUN go get github.com/githubnemo/CompileDaemon
-ENTRYPOINT CompileDaemon --build="go build server/main.go" --command=./main
+ENTRYPOINT CompileDaemon --build="go build -o main ./server/..." --command=./main
 
 FROM build as prod
 COPY . .

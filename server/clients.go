@@ -1,4 +1,4 @@
-package news
+package main
 
 import (
 	"fmt"
@@ -12,8 +12,9 @@ type Client struct {
 
 var clients = make(map[Client]struct{})
 
-func (a *Api) UpdateClients() {
-	for c, _ := range clients {
+func (a *App) UpdateClients() {
+	fmt.Println("UpdateClinets triggered")
+	for c := range clients {
 		params := c.request.URL.Query()
 		country, ok := params["country"]
 		if !ok {
@@ -24,6 +25,7 @@ func (a *Api) UpdateClients() {
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Printf("Updating client: %s", c)
 		c.mc <- []byte(cNews)
 	}
 }
@@ -32,10 +34,12 @@ func RegisterClient(r *http.Request) Client {
 	mc := make(chan []byte)
 	c := Client{mc: mc, request: r}
 	clients[c] = struct{}{}
+	fmt.Printf("Registered client: %s", c)
 
 	return c
 }
 
-func RemoveClient(currentClient Client) {
-	delete(clients, currentClient)
+func RemoveClient(c Client) {
+	delete(clients, c)
+	fmt.Printf("Deleted client: %s", c)
 }
