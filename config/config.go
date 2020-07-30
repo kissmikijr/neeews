@@ -18,15 +18,13 @@ type Config struct {
 
 func New() *Config {
 	return &Config{
-		RedisConnectionString:  getEnv("REDIS_URL", ""),
-		RabbitConnectionString: getEnv("CLOUDAMQP_URL", ""),
-		RabbitQueueName:        getEnv("RABBIT_QUEUE_NAME", ""),
-		NewsApiKey:             getEnv("NEWS_API_KEY", ""),
-		Port:                   getEnv("PORT", "5000"),
-		MongoDBUri:             getEnv("MONGODB_URI", ""),
-		CountryCodes:           [5]string{"hu", "gb", "us", "ca", "de"},
-		WorkerToken:            getEnv("WORKER_TOKEN", "erhrncwonudKre/ao?SrtrPnaldentTräsidumpwd8ramatid_isürmn.tennt.deViiceiitwhen"),
-		HostName:               getEnv("HOST_NAME", "http://localhost:5000"),
+		RedisConnectionString: getEnv("REDIS_URL", ""),
+		NewsApiKey:            getEnv("NEWS_API_KEY", ""),
+		Port:                  getEnv("PORT", "5000"),
+		MongoDBUri:            getEnv("MONGODB_URI", ""),
+		CountryCodes:          [5]string{"hu", "gb", "us", "ca", "de"},
+		WorkerToken:           getEnv("WORKER_TOKEN", ""),
+		HostName:              getEnv("HOST_NAME", "http://localhost:5000"),
 	}
 }
 

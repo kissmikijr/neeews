@@ -17,7 +17,7 @@ type Client struct {
 var clients = make(map[uuid.UUID]Client)
 
 func (a *App) UpdateClients() {
-	fmt.Println("UpdateClinets triggered")
+	fmt.Println("UpdateClients triggered")
 	for _, c := range clients {
 		country, ok := c.params["country"]
 		if !ok {
