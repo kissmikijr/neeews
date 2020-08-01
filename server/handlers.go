@@ -70,7 +70,7 @@ func (a *App) HandleUpdateClients(w http.ResponseWriter, r *http.Request) {
 func (a *App) Countries(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
-		Data [5]string `json:"data"`
+		Data [3]string `json:"data"`
 	}{
 		a.Conf.CountryCodes,
 	}
