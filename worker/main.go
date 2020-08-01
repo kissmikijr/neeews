@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"neeews/components"
 	"neeews/config"
 	"net/http"
+	"os"
 )
 
 type Source struct {
@@ -59,6 +61,19 @@ func main() {
 			fmt.Println(err)
 		}
 		defer resp.Body.Close()
+		if resp.StatusCode >= 400 {
+			fmt.Printf("Api call to NewsApi returned with: %d\n", resp.StatusCode)
+			var t map[string]interface{}
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				panic(err)
+			}
+			if err := json.Unmarshal(data, &t); err != nil {
+				panic(err)
+			}
+			fmt.Printf("Error message: %s\n", t["message"])
+			os.Exit(1)
+		}
 
 		var newsApiResponse NewsApiResponse
 
@@ -66,6 +81,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println(newsApiResponse.Articles)
 		r, err := json.Marshal(newsApiResponse.Articles)
 		if err != nil {
 			panic(err)
