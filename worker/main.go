@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"io/ioutil"
 	"neeews/components"
 	"neeews/config"
 	"net/http"
+	"os"
 )
 
 type Source struct {
@@ -35,19 +36,6 @@ type Body struct {
 
 var ctx = context.Background()
 
-func triggerClientUpdate(conf *config.Config) {
-	bearer := "Bearer " + conf.WorkerToken
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/news/webhook/update-clients", conf.HostName), nil)
-	req.Header.Add("Authorization", bearer)
-
-	client := &http.Client{}
-	_, err = client.Do(req)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
 func main() {
 	conf := config.New()
 	redis := components.NewRedis(conf.RedisConnectionString)
@@ -59,6 +47,19 @@ func main() {
 			fmt.Println(err)
 		}
 		defer resp.Body.Close()
+		if resp.StatusCode >= 400 {
+			fmt.Printf("Api call to NewsApi returned with: %d\n", resp.StatusCode)
+			var t map[string]interface{}
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				panic(err)
+			}
+			if err := json.Unmarshal(data, &t); err != nil {
+				panic(err)
+			}
+			fmt.Printf("Error message: %s\n", t["message"])
+			os.Exit(1)
+		}
 
 		var newsApiResponse NewsApiResponse
 
@@ -66,6 +67,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println(newsApiResponse.Articles)
 		r, err := json.Marshal(newsApiResponse.Articles)
 		if err != nil {
 			panic(err)
@@ -75,6 +77,5 @@ func main() {
 			panic(err)
 		}
 	}
-	triggerClientUpdate(conf)
 
 }
