@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"neeews/components"
 	"neeews/config"
 	"net/http"
@@ -36,19 +35,6 @@ type Body struct {
 }
 
 var ctx = context.Background()
-
-func triggerClientUpdate(conf *config.Config) {
-	bearer := "Bearer " + conf.WorkerToken
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/news/webhook/update-clients", conf.HostName), nil)
-	req.Header.Add("Authorization", bearer)
-
-	client := &http.Client{}
-	_, err = client.Do(req)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
 
 func main() {
 	conf := config.New()
@@ -91,6 +77,5 @@ func main() {
 			panic(err)
 		}
 	}
-	triggerClientUpdate(conf)
 
 }

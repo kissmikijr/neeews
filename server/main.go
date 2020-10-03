@@ -12,7 +12,7 @@ func main() {
 
 	port := app.Conf.Port
 
-	fmt.Printf("Server listening on port: %s", port)
+	fmt.Printf("Server listening on port: %s \n", port)
 	http.ListenAndServe(":"+port, r)
 
 }

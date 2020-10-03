@@ -1,49 +1,57 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 )
 
 type Body struct {
 	Token string
 }
+type Source struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+type Article struct {
+	Source      Source `json:"source"`
+	Author      string `json:"author"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Url         string `json:"url"`
+	UrlToImage  string `json:"urlToImage"`
+	PublishedAt string `json:"publishedAt"`
+	Content     string `json:"content"`
+}
 
-var ctx = context.Background()
-
-func (a *App) Headlines(w http.ResponseWriter, r *http.Request) {
+func (a *App) GetHeadlines(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 
-	client := RegisterClient(params, "headlines")
-
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 
 	country, ok := params["country"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	headlines, err := a.Redis.Get(ctx, country[0]).Result()
+	cachedHeadlines, err := a.Cache.Get(country[0])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var headlines []Article
+	err = json.Unmarshal([]byte(cachedHeadlines), &headlines)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	payload, err := json.Marshal(headlines)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	defer RemoveClient(client)
-
-	go func() {
-		client.mc <- []byte(headlines)
-	}()
-
-	for {
-		fmt.Fprintf(w, "data: %s\n\n", <-client.mc)
-	}
+	w.Write(payload)
 
 }
 
@@ -51,23 +59,7 @@ func (a *App) Everything(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-func (a *App) HandleUpdateClients(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if token == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	secret := strings.Split(token, " ")[1]
-	if secret != a.Conf.WorkerToken {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	fmt.Println("Authorized request.")
-	a.UpdateClients()
-}
-
-func (a *App) Countries(w http.ResponseWriter, r *http.Request) {
+func (a *App) GetCountries(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Data [3]string `json:"data"`
