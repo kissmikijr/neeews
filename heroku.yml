@@ -1,6 +1,0 @@
-build:
-  docker:
-    web:
-      dockerfile: Dockerfile
-run:
-  web: /app/server

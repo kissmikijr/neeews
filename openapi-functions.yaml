@@ -1,0 +1,38 @@
+swagger: "2.0"
+info:
+  title: neeews-api neeews api service
+  description: Sample API on API Gateway with a Google Cloud Functions backend
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+basePath: /api/news
+paths:
+  /countries:
+    get:
+      summary: Get countries
+      operationId: countries
+      x-google-backend:
+        address: https://europe-west6-graphic-charter-314415.cloudfunctions.net/GetCountries
+      responses:
+        "200":
+          description: Ok
+  /headlines:
+    get:
+      summary: Get headlines
+      operationId: headlines
+      x-google-backend:
+        address: https://europe-west6-graphic-charter-314415.cloudfunctions.net/GetHeadlines
+      responses:
+        "200":
+          description: Ok
+  /everything:
+    get:
+      summary: Get everything
+      operationId: everything
+      x-google-backend:
+        address: https://europe-west6-graphic-charter-314415.cloudfunctions.net/GetEverything
+      responses:
+        "200":
+          description: Ok
