@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/kissmikijr/go-news"
 	"github.com/kissmikijr/neeews/components"
 	"github.com/kissmikijr/neeews/config"
 )
@@ -54,9 +55,11 @@ func (c Cache) Set(key string, value string) error {
 var conf *config.Config
 var redisClient *redis.Client
 var cache Cache
+var newsApi *news.NewsApi
 
 func init() {
 	conf = config.New()
 	redisClient = components.NewRedis(conf.RedisConnectionString)
 	cache = Cache{redisClient}
+	newsApi = news.NewApi(conf.NewsApiKey)
 }

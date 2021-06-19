@@ -3,13 +3,16 @@ package main
 import (
 	"net/http"
 
-	function "github.com/kissmikijr/neeews"
+	functions "github.com/kissmikijr/neeews"
 )
 
 func main() {
-	http.HandleFunc("/headlines", function.GetHeadlines)
-	http.HandleFunc("/everything", function.GetEverything)
-	http.HandleFunc("/countries", function.GetCountries)
-	http.HandleFunc("/scrape-news-api", function.ScrapeNewsApi)
+	http.HandleFunc("/headlines", functions.GetHeadlines)
+	http.HandleFunc("/everything", functions.GetEverything)
+	http.HandleFunc("/countries", functions.GetCountries)
+	http.HandleFunc("/scrape-news-api", functions.ScrapeNewsApi)
+	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 	http.ListenAndServe(":8080", nil)
 }
